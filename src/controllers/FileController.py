@@ -11,4 +11,13 @@ def upload(file):
 
     return response
 
+def analyze():
+    url = "https://www.youtube.com/watch?v=JBClc5YiQII"
 
+    service = FileService(url)
+    text = service.transcribe()
+    print("Transcrição:", text)
+
+
+    # url = "https://www.youtube.com/shorts/yUy-tqloVmo"
+    

@@ -19,3 +19,9 @@ async def ping_pong():
 @app.post("/upload")
 async def upload(file: UploadFile):
     return { "success": file_controller.upload(file) }    
+
+@app.get("/analyze")
+async def analyze():
+    file_controller.analyze()
+    
+    return { "success": "deu bao" }    
