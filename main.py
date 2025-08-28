@@ -13,9 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze-url")
-async def analyzeUrl(url: str):
-    content, code, message = file_controller.analyze_url(url)
+@app.post("/analyze-youtube")
+async def analyzeYoutube(url: str):
+    content, code, message = file_controller.analyze_youtube(url)
+    return HttpUtil.response(content, code, message)
+
+@app.post("/analyze-video")
+async def analyzeVideo(file: UploadFile):
+    content, code, message = await file_controller.analyze_video(file)
     return HttpUtil.response(content, code, message)
 
 @app.post("/analyze-text")
