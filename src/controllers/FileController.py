@@ -1,14 +1,17 @@
 from src.validators import FileValidator
-from src.services.FileService import FileService
+from src.services.YoutubeService import YoutubeService
+from src.enums import HttpEnum
 
-def upload(file):
-    response = FileValidator.validate(file)
+def analyze(url):
+    service = YoutubeService(url)
+    text = service.transcribe()
+    
+    code = HttpEnum.HttpStatusCode.OK
+    message = ''
 
-    if not response:
-        file_service = FileService(file)
-        
-        return { "message": "file service accessed" }
+    if not text:
+        code = HttpEnum.HttpStatusCode.INTERNAL_SERVER_ERROR
+        message = HttpEnum.HttpStatusMessage.INTERNAL_SERVER_ERROR
 
-    return response
-
-
+    return text, code, message
+    
