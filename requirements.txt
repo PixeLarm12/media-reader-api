@@ -8,3 +8,4 @@ openai-whisper
 torch
 pytube
 yt-dlp
+PyPDF2

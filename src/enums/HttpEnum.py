@@ -1,6 +1,6 @@
 from enum import Enum
 
-class HttpStatusCode(Enum):
+class Code(Enum):
     OK = 200
     CREATED = 201
     ACCEPTED = 202
@@ -19,7 +19,7 @@ class HttpStatusCode(Enum):
     GATEWAY_TIMEOUT = 504
 
 
-class HttpStatusMessage(Enum):
+class Message(Enum):
     OK = "ok"
     CREATED = "created"
     ACCEPTED = "accepted"
