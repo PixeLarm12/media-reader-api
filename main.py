@@ -22,3 +22,8 @@ async def analyzeUrl(url: str):
 async def analyzeText(file: UploadFile):
     content, code, message = await file_controller.analyze_text(file)
     return HttpUtil.response(content, code, message)
+
+@app.post("/analyze-pdf")
+async def analyzePdf(file: UploadFile):
+    content, code, message = await file_controller.analyze_pdf(file)
+    return HttpUtil.response(content, code, message)
