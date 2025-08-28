@@ -1,10 +1,23 @@
 from src.validators import FileValidator
-from src.services import YoutubeService, TextService, PdfService, AudioService
+from src.services import YoutubeService, TextService, PdfService, AudioService, VideoService
 from src.enums import HttpEnum
 
-def analyze_url(url):
+def analyze_youtube(url):
     service = YoutubeService(url)
     text = service.transcribe()
+    
+    code = HttpEnum.Code.OK
+    message = ''
+
+    if not text:
+        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
+        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
+
+    return text, code, message
+
+async def analyze_video(file):
+    service = VideoService(file)
+    text = await service.transcribe()
     
     code = HttpEnum.Code.OK
     message = ''
