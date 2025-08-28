@@ -27,3 +27,8 @@ async def analyzeText(file: UploadFile):
 async def analyzePdf(file: UploadFile):
     content, code, message = await file_controller.analyze_pdf(file)
     return HttpUtil.response(content, code, message)
+
+@app.post("/analyze-audio")
+async def analyzeAudio(file: UploadFile):
+    content, code, message = await file_controller.analyze_audio(file)
+    return HttpUtil.response(content, code, message)
