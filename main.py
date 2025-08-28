@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.controllers import FileController as file_controller
+from src.utils import HttpUtil
 
 app = FastAPI()
 
@@ -12,16 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/ping")
-async def ping_pong():
-    return { "pong" }
-
-@app.post("/upload")
-async def upload(file: UploadFile):
-    return { "success": file_controller.upload(file) }    
-
-@app.get("/analyze")
-async def analyze():
-    file_controller.analyze()
-    
-    return { "success": "deu bao" }    
+@app.post("/analyze")
+async def analyze(url):
+    content, code, message = file_controller.analyze(url)
+    return HttpUtil.response(content, code, message)

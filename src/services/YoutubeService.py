@@ -6,20 +6,19 @@ import requests
 import whisper
 import yt_dlp
 
-class FileService:
+class YoutubeService:
     def __init__(self, url: str):
         if not url:
             raise ValueError("You must provide a URL.")
         self.url = url
-        self.model = whisper.load_model("base")  # pode trocar por 'small', 'medium', 'large'
-        self._temp_files = []  # arquivos temporários
-        self._temp_dirs = []   # diretórios temporários
+        self.model = whisper.load_model("base")
+        self._temp_files = [] 
+        self._temp_dirs = []
 
     def _is_youtube(self) -> bool:
         return "youtube.com" in self.url or "youtu.be" in self.url
 
     def _download_youtube(self) -> str:
-        """Baixa qualquer vídeo do YouTube usando yt-dlp"""
         tmp_dir = tempfile.mkdtemp()
         self._temp_dirs.append(tmp_dir)
 
@@ -35,13 +34,12 @@ class FileService:
 
         files = os.listdir(tmp_dir)
         if not files:
-            raise RuntimeError("Falha ao baixar o vídeo do YouTube")
+            raise RuntimeError("There's an error downloading YouTube video")
 
         video_path = os.path.join(tmp_dir, files[0])
         return video_path
 
     def _download_http(self) -> str:
-        """Baixa vídeo HTTP/MP4 completo"""
         response = requests.get(self.url, stream=True)
         response.raise_for_status()
 
@@ -52,7 +50,6 @@ class FileService:
         return tmp_file.name
 
     def _extract_audio(self, video_path: str) -> str:
-        """Extrai áudio de um arquivo de vídeo local"""
         audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".wav").name
         self._temp_files.append(audio_path)
 
@@ -63,12 +60,11 @@ class FileService:
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if process.returncode != 0:
-            raise RuntimeError(f"FFmpeg falhou: {process.stderr.decode('utf-8')}")
+            raise RuntimeError(f"FFmpeg failed: {process.stderr.decode('utf-8')}")
 
         return audio_path
 
     def transcribe(self) -> str:
-        """Transcreve o vídeo/áudio da URL"""
         try:
             if self._is_youtube():
                 video_path = self._download_youtube()
@@ -83,7 +79,6 @@ class FileService:
             self.cleanup()
 
     def cleanup(self):
-        """Remove arquivos e diretórios temporários"""
         for f in self._temp_files:
             try:
                 if os.path.isfile(f):
