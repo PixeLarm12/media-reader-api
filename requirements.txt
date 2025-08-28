@@ -9,3 +9,4 @@ torch
 pytube
 yt-dlp
 PyPDF2
+speechrecognition
