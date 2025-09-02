@@ -1,64 +1,42 @@
+from fastapi import UploadFile
 from src.validators import FileValidator
 from src.services import YoutubeService, TextService, PdfService, AudioService, VideoService
-from src.enums import HttpEnum
+from src.enums import HttpEnum, MediaEnum
 from src.exceptions import AppException
+from src.utils import FileUtil
 
-def analyze_youtube(url):
-    service = YoutubeService(url)
-    text = service.transcribe()
-    
-    if not text:
+async def analyze_media(media):
+    content = []
+    code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
+    message = f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Some error occured with the media uploaded."
+
+    if isinstance(media, str):
+        service = YoutubeService(media)
+        content = service.transcribe()
+    if isinstance(media, UploadFile):
+        media_extension = FileUtil.getFileExtension(UploadFile)
+
+        if media_extension in  MediaEnum.TEXT_EXTENSIONS:
+            service = TextService(media)
+            content = await service.transcribe()
+        elif media_extension in  MediaEnum.VIDEO_EXTENSIONS:
+            service = VideoService(media)
+            content = await service.transcribe()
+        elif media_extension in  MediaEnum.AUDIO_EXTENSIONS:
+            service = AudioService(media)
+            content = await service.transcribe()
+        elif media_extension in  MediaEnum.DOC_EXTENSIONS:
+            service = PdfService(media)
+            content = await service.transcribe()
+        else:
+            content = []
+            code = HttpEnum.Code.BAD_REQUEST
+            message = f"[{HttpEnum.Message.BAD_REQUEST.value}] The media type is not supported. Extension {media_extension}"
+
+    if not content:
         raise AppException(
-            code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
-            message = HttpEnum.Message.INTERNAL_SERVER_ERROR
+            code,
+            message
         )
 
-    return text, HttpEnum.Code.OK, ''
-
-async def analyze_video(file):
-    service = VideoService(file)
-    text = await service.transcribe()
-    
-    if not text:
-        raise AppException(
-            code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
-            message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-        )
-
-    return text, HttpEnum.Code.OK, ''
-
-async def analyze_text(file):
-    service = TextService(file)
-    text = await service.transcribe()
-    
-    if not text:
-        raise AppException(
-            code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
-            message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-        )
-
-    return text, HttpEnum.Code.OK, ''
-
-async def analyze_pdf(file):
-    service = PdfService(file)
-    text = await service.transcribe()
-    
-    if not text:
-        raise AppException(
-            code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
-            message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-        )
-
-    return text, HttpEnum.Code.OK, ''
-
-async def analyze_audio(file):
-    service = AudioService(file)
-    text = await service.transcribe()
-    
-    if not text:
-        raise AppException(
-            code = HttpEnum.Code.INTERNAL_SERVER_ERROR,
-            message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-        )
-
-    return text, HttpEnum.Code.OK, ''
+    return content, HttpEnum.Code.OK, ''

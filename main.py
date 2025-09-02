@@ -35,27 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze-youtube")
-async def analyzeYoutube(url: str):
-    content, code, message = file_controller.analyze_youtube(url)
-    return HttpUtil.response(content, code, message)
-
-@app.post("/analyze-video")
-async def analyzeVideo(file: UploadFile):
-    content, code, message = await file_controller.analyze_video(file)
-    return HttpUtil.response(content, code, message)
-
-@app.post("/analyze-text")
-async def analyzeText(file: UploadFile):
-    content, code, message = await file_controller.analyze_text(file)
-    return HttpUtil.response(content, code, message)
-
-@app.post("/analyze-pdf")
-async def analyzePdf(file: UploadFile):
-    content, code, message = await file_controller.analyze_pdf(file)
-    return HttpUtil.response(content, code, message)
-
-@app.post("/analyze-audio")
-async def analyzeAudio(file: UploadFile):
-    content, code, message = await file_controller.analyze_audio(file)
+@app.post("/analyze")
+async def analyze(media):
+    content, code, message = await file_controller.analyze_media(media)
     return HttpUtil.response(content, code, message)
