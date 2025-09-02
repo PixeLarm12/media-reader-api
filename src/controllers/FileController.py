@@ -1,68 +1,48 @@
-from src.validators import FileValidator
-from src.services import YoutubeService, TextService, PdfService, AudioService, VideoService
-from src.enums import HttpEnum
+from fastapi import UploadFile
+from src.services import YoutubeService
+from src.enums import HttpEnum, MediaEnum
+from src.exceptions import AppException
+from src.utils import FileUtil, GeneralUtil
 
-def analyze_youtube(url):
-    service = YoutubeService(url)
-    text = service.transcribe()
-    
-    code = HttpEnum.Code.OK
-    message = ''
+async def analyze_media(type: int, path: str = None, media: UploadFile = None):
+    if type == MediaEnum.Types.YOUTUBE.value:
+        if not path:
+            raise AppException(
+                code=HttpEnum.Code.BAD_REQUEST,
+                message=f"[{HttpEnum.Message.BAD_REQUEST.value}] YouTube URL is empty.",
+                data=[]
+            )
+        service = YoutubeService(path)
+        content = service.transcribe()
+    else:
+        if not media:
+            raise AppException(
+                code=HttpEnum.Code.BAD_REQUEST,
+                message=f"[{HttpEnum.Message.BAD_REQUEST.value}] Media file is required.",
+                data=[]
+            )
 
-    if not text:
-        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
-        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
+        media_extension = FileUtil.getFileExtension(media)
 
-    return text, code, message
+        ServiceClass, allowed_extensions = GeneralUtil.map_media_services(type)
 
-async def analyze_video(file):
-    service = VideoService(file)
-    text = await service.transcribe()
-    
-    code = HttpEnum.Code.OK
-    message = ''
+        if not ServiceClass:
+            raise AppException(
+                code=HttpEnum.Code.BAD_REQUEST,
+                message=f"[{HttpEnum.Message.BAD_REQUEST.value}] The media type {type} is not supported.",
+                data=[]
+            )
 
-    if not text:
-        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
-        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
+        FileUtil.validate_extension(media_extension, allowed_extensions, type)
 
-    return text, code, message
+        service = ServiceClass(media)
+        content = await service.transcribe()
 
-async def analyze_text(file):
-    service = TextService(file)
-    text = await service.transcribe()
-    
-    code = HttpEnum.Code.OK
-    message = ''
+    if not content:
+        raise AppException(
+            code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+            message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] No content could be extracted from the media.",
+            data=[]
+        )
 
-    if not text:
-        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
-        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-
-    return text, code, message
-
-async def analyze_pdf(file):
-    service = PdfService(file)
-    text = await service.transcribe()
-    
-    code = HttpEnum.Code.OK
-    message = ''
-
-    if not text:
-        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
-        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-
-    return text, code, message
-
-async def analyze_audio(file):
-    service = AudioService(file)
-    text = await service.transcribe()
-    
-    code = HttpEnum.Code.OK
-    message = ''
-
-    if not text:
-        code = HttpEnum.Code.INTERNAL_SERVER_ERROR
-        message = HttpEnum.Message.INTERNAL_SERVER_ERROR
-
-    return text, code, message
+    return content, HttpEnum.Code.OK, ''

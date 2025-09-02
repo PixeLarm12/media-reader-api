@@ -1,8 +1,19 @@
-from src.enums import HttpEnum
+from fastapi.responses import JSONResponse
+from enum import Enum
 
-def response(data, code = HttpEnum.Code.OK.value, message = HttpEnum.Message.OK):
-    return {
-        "code": code,
-        "message": message,
-        "data": data
-    }
+class HttpUtil:
+    @staticmethod
+    def response(data, code, message):
+        if isinstance(code, Enum):
+            code = code.value
+        if isinstance(message, Enum):
+            message = message.value
+
+        return JSONResponse(
+            status_code=code,
+            content={
+                "code": code,
+                "message": message,
+                "data": data or []
+            }
+        )

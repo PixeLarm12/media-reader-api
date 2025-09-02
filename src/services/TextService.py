@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from pathlib import Path
 from src.enums import HttpEnum
+from src.exceptions import AppException
 
 class TextService:
     SUPPORTED_EXTENSIONS = [".txt", ".md"]
@@ -12,26 +13,19 @@ class TextService:
         try:
             ext = Path(self.file.filename).suffix.lower()
             if ext not in self.SUPPORTED_EXTENSIONS:
-                return {
-                    "content": None,
-                    "code": HttpEnum.Code.UNSUPPORTED_MEDIA.value,
-                    "message": HttpEnum.Message.UNSUPPORTED_MEDIA.value
-                }
+                raise AppException(
+                    code=HttpEnum.Code.UNPROCESSABLE_ENTITY,
+                    message=f"[{HttpEnum.Message.UNPROCESSABLE_ENTITY.value}] Extension {ext} not supported",
+                    data=[]
+                )
 
             content_bytes = await self.file.read()
             content_str = content_bytes.decode("utf-8")
 
-            transcript = content_str.strip()
-
-            return {
-                "content": transcript,
-                "code": HttpEnum.Code.OK.value,
-                "message": HttpEnum.Message.OK.value
-            }
-
+            return content_str.strip()
         except Exception as e:
-            return {
-                "content": None,
-                "code": HttpEnum.Code.INTERNAL_SERVER_ERROR.value,
-                "message": f"{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}: {str(e)}"
-            }
+            raise AppException(
+                code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+                message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Error transcribing Text: {str(e)}",
+                data=[]
+            )
