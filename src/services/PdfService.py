@@ -1,5 +1,7 @@
 from PyPDF2 import PdfReader
 from pathlib import Path
+from src.enums import HttpEnum
+from src.exceptions import AppException
 import re
 
 class PdfService:
@@ -11,7 +13,11 @@ class PdfService:
 
     def validate(self):
         if self.extension not in self.SUPPORTED_EXTENSIONS:
-            raise ValueError(f"Extensão {self.extension} não suportada pelo PdfService")
+            raise AppException(
+                code=HttpEnum.Code.UNPROCESSABLE_ENTITY,
+                message=f"[{HttpEnum.Message.UNPROCESSABLE_ENTITY.value}] Extension {self.extension} not supported.",
+                data=[]
+            )
 
     async def transcribe(self):
         self.validate()
@@ -22,4 +28,8 @@ class PdfService:
                 text += page.extract_text() or ""
             return re.sub(r"\s+", " ", text.replace("\n", " ")).strip()
         except Exception as e:
-            raise RuntimeError(f"Erro ao transcrever PDF: {str(e)}")
+            raise AppException(
+                code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+                message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Error transcribing PDF: {str(e)}",
+                data=[]
+            )

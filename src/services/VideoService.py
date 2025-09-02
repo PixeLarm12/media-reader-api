@@ -2,6 +2,8 @@ import os
 import tempfile
 import subprocess
 import speech_recognition as sr
+from src.exceptions import AppException
+from src.enums import HttpEnum
 
 class VideoService:
     SUPPORTED_EXTENSIONS = [".mp4", ".avi", ".mov", ".mkv"]
@@ -14,7 +16,11 @@ class VideoService:
             suffix = os.path.splitext(self.file.filename)[-1].lower()
 
             if suffix not in self.SUPPORTED_EXTENSIONS:
-                raise ValueError(f"Extensão {suffix} não suportada!")
+                raise AppException(
+                    code=HttpEnum.Code.UNPROCESSABLE_ENTITY,
+                    message=f"[{HttpEnum.Message.UNPROCESSABLE_ENTITY.value}] Extension {suffix} not supported.",
+                    data=[]
+                )
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_video:
                 tmp_video.write(await self.file.read())
@@ -34,7 +40,11 @@ class VideoService:
             )
 
             if proc.returncode != 0:
-                raise RuntimeError(f"Erro ao extrair áudio: {proc.stderr.decode('utf-8', errors='ignore')}")
+                raise AppException(
+                    code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+                    message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Error extracting audio: {proc.stderr.decode('utf-8', errors='ignore')}",
+                    data=[]
+                )
 
             recognizer = sr.Recognizer()
             with sr.AudioFile(tmp_audio_path) as source:
@@ -48,8 +58,22 @@ class VideoService:
             return text
 
         except sr.UnknownValueError:
-            return None
+            raise AppException(
+                code=HttpEnum.Code.UNPROCESSABLE_ENTITY,
+                message=HttpEnum.Message.UNPROCESSABLE_ENTITY,
+                data=[]
+            )
         except sr.RequestError as e:
-            raise RuntimeError(f"Erro ao se conectar ao serviço de reconhecimento: {e}")
+            raise AppException(
+                code=HttpEnum.Code.SERVICE_UNAVAILABLE,
+                message=f"[{HttpEnum.Message.SERVICE_UNAVAILABLE.value}] Error connecting to recognition service: {e}",
+                data=[]
+            )
+        except AppException:
+            raise
         except Exception as e:
-            raise RuntimeError(f"Erro na transcrição do vídeo: {e}")
+            raise AppException(
+                code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+                message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Video transcription error: {e}",
+                data=[]
+            )

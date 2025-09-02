@@ -2,6 +2,8 @@ import os
 import tempfile
 from pydub import AudioSegment
 import speech_recognition as sr
+from src.enums import HttpEnum
+from src.exceptions import AppException
 
 class AudioService:
     SUPPORTED_EXTENSIONS = [".mp3", ".wav", ".ogg", ".flac", ".m4a"]
@@ -14,7 +16,11 @@ class AudioService:
             suffix = os.path.splitext(self.file.filename)[-1].lower()
 
             if suffix not in self.SUPPORTED_EXTENSIONS:
-                raise ValueError(f"Extensão {suffix} não suportada!")
+                raise AppException(
+                    code=HttpEnum.Code.UNPROCESSABLE_ENTITY,
+                    message=f"[{HttpEnum.Message.UNPROCESSABLE_ENTITY.value}] Extesion {suffix} not supported.",
+                    data=[]
+                )
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_wav:
                 audio = AudioSegment.from_file(self.file.file, format=suffix.replace(".", ""))
@@ -34,6 +40,14 @@ class AudioService:
         except sr.UnknownValueError:
             return None
         except sr.RequestError as e:
-            raise RuntimeError(f"Erro ao se conectar ao serviço de reconhecimento: {e}")
+            raise AppException(
+                code=HttpEnum.Code.BAD_REQUEST,
+                message=f"[{HttpEnum.Message.BAD_REQUEST.value}] Error connecting to recognition service: {e}",
+                data=[]
+            )
         except Exception as e:
-            raise RuntimeError(f"Erro na transcrição do áudio: {e}")
+            raise AppException(
+                code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+                message=f"[{HttpEnum.Message.INTERNAL_SERVER_ERROR.value}] Video transcription error: {e}",
+                data=[]
+            )
