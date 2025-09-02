@@ -1,9 +1,31 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from src.controllers import FileController as file_controller
-from src.utils import HttpUtil
+from src.utils.HttpUtil import HttpUtil
+from src.exceptions import AppException
+from src.enums import HttpEnum
+from enum import Enum
 
 app = FastAPI()
+
+@app.exception_handler(AppException)
+async def app_exception_handler(request: Request, exc: AppException):
+    return HttpUtil.response(
+        data=exc.data,
+        code=exc.code,
+        message=exc.message
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    print(f"Unhandled error: {exc}")
+
+    return HttpUtil.response(
+        data=[],
+        code=HttpEnum.Code.INTERNAL_SERVER_ERROR,
+        message=str(exc) or HttpEnum.Message.INTERNAL_SERVER_ERROR
+    )
 
 app.add_middleware(
     CORSMiddleware,
