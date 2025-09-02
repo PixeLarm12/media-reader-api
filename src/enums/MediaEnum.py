@@ -1,5 +1,12 @@
 from enum import Enum
 
+class Types(Enum):
+    YOUTUBE = 1
+    TEXT = 2
+    DOC = 3
+    AUDIO = 4
+    VIDEO = 5
+
 class Extension(Enum):
     # Text
     TXT = ".txt"
@@ -42,5 +49,11 @@ TEXT_EXTENSIONS = [Extension.TXT.value, Extension.MD.value]
 AUDIO_EXTENSIONS = [Extension.MP3.value, Extension.WAV.value, Extension.OGG.value, Extension.FLAC.value, Extension.M4A.value]
 VIDEO_EXTENSIONS = [Extension.MP4.value, Extension.AVI.value, Extension.MOV.value, Extension.MKV.value]
 DOC_EXTENSIONS = [Extension.PDF.value]
+TYPES_STRING = {
+    Types.TEXT.value: "Text",
+    Types.DOC.value: "Document",
+    Types.AUDIO.value: "Audio",
+    Types.VIDEO.value: "Video",
+}
 
 ALL_EXTENSIONS = TEXT_EXTENSIONS + AUDIO_EXTENSIONS + VIDEO_EXTENSIONS + DOC_EXTENSIONS

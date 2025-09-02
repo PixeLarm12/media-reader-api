@@ -1,6 +1,5 @@
-from fastapi import FastAPI, UploadFile, Request
+from fastapi import FastAPI, UploadFile, Request, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from src.controllers import FileController as file_controller
 from src.utils.HttpUtil import HttpUtil
 from src.exceptions import AppException
@@ -35,7 +34,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze")
-async def analyze(media):
-    content, code, message = await file_controller.analyze_media(media)
+@app.post("/analyze_file")
+async def analyze_file(type: int, media: UploadFile = None):
+    content, code, message = await file_controller.analyze_media(type, None, media)
+    return HttpUtil.response(content, code, message)
+
+@app.post("/analyze_url")
+async def analyze_url(type: int, path: str = None):
+    content, code, message = await file_controller.analyze_media(type, path, None)
     return HttpUtil.response(content, code, message)
